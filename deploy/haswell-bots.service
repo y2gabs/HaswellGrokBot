@@ -1,0 +1,19 @@
+# /etc/systemd/system/haswell-bots.service
+[Unit]
+Description=Haswell Bots (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=haswellbots
+WorkingDirectory=/opt/haswell-bots/current
+EnvironmentFile=/opt/haswell-bots/.env
+Environment=NODE_ENV=production
+Environment=PORT=3100
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
