@@ -13,6 +13,13 @@ work conversationally and **always asks before changing anything**.
   **team members** and **partners**. You can attach photos in the chat for
   image fields.
 
+To dictate, tap the **mic** in the message box. It uses the browser's own
+speech recognition, so words appear as you speak and it costs nothing. It works
+in Chrome, Edge and Safari/iOS; Firefox doesn't have it, so the button is
+hidden there. Dictation only fills the box: you still review it and tap Send.
+The audio goes to the browser's speech service (Google in Chrome, Apple in
+Safari), not through this app, and the site must be served over HTTPS.
+
 ```
 Browser ─► Next.js app (this repo, on the VPS)
              ├─ DeepSeek V4 Flash: orchestration and writing

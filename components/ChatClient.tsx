@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Blob } from "./Blob";
 import { ApprovalCard, ArticleCard, ChoiceChips, ImagePicker } from "./Cards";
 import { BOTS, botMeta } from "@/lib/bots";
 import { api } from "@/lib/client";
+import { useDictation } from "@/lib/dictation";
 import type { ChatMessage, Thread } from "@/lib/types";
 
 type Attachment = { id: number; url: string };
@@ -37,6 +38,16 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
   const bottom = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const lastCount = useRef(0);
+  const dictation = useDictation(setText);
+  const box = useRef<HTMLTextAreaElement>(null);
+
+  // Grow the message box with its text (dictation can fill several lines).
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 144)}px`;
+  }, [text]);
 
   const load = useCallback(async () => {
     try {
@@ -92,6 +103,7 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
   }
 
   async function send(message?: string) {
+    if (dictation.listening) dictation.stop();
     const body = (message ?? text).trim();
     if ((!body && !attachments.length) || sending || busy) return;
     setSending(true);
@@ -242,7 +254,9 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
             </button>
           </div>
         ) : null}
-        {error ? <p className="rounded-2xl bg-panel px-4 py-3 text-sm text-bad">{error}</p> : null}
+        {error || dictation.error ? (
+          <p className="rounded-2xl bg-panel px-4 py-3 text-sm text-bad">{error || dictation.error}</p>
+        ) : null}
         <div ref={bottom} />
       </div>
 
@@ -300,6 +314,7 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
             </>
           ) : null}
           <textarea
+            ref={box}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
@@ -309,9 +324,32 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
               }
             }}
             rows={1}
-            placeholder={busy ? "Working…" : `Message ${meta.name}`}
+            placeholder={busy ? "Working…" : dictation.listening ? "Listening…" : `Message ${meta.name}`}
             className="max-h-36 min-h-11 flex-1 resize-none rounded-3xl bg-panel px-4 py-3 outline-none placeholder:text-faint"
           />
+          {dictation.supported ? (
+            <button
+              type="button"
+              onClick={() => (dictation.listening ? dictation.stop() : dictation.start(text))}
+              disabled={locked && !dictation.listening}
+              aria-pressed={dictation.listening}
+              aria-label={dictation.listening ? "Stop dictation" : "Speak your message"}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-50 ${
+                dictation.listening ? "mic-pulse bg-red-500 text-white" : "bg-panel text-muted"
+              }`}
+            >
+              {dictation.listening ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="9" y="3" width="6" height="11" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+                </svg>
+              )}
+            </button>
+          ) : null}
           <button
             type="submit"
             disabled={locked || (!text.trim() && !attachments.length)}

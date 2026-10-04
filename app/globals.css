@@ -67,3 +67,14 @@ body {
 .article p { margin: 0 0 0.7rem; }
 .article ul { list-style: disc; padding-left: 1.2rem; margin: 0 0 0.7rem; }
 .article a { text-decoration: underline; }
+
+/* Microphone while listening. */
+@keyframes mic-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+  100% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+.mic-pulse { animation: mic-pulse 1.2s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .floaty, .blob-eyes, .blob-eyes-busy, .dot, .mic-pulse { animation: none; }
+}
