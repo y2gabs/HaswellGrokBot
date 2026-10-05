@@ -12,18 +12,18 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 }, devi
 page.on("pageerror", (e) => console.log("PAGE ERROR", e.message));
 const step = (s) => console.log("•", s);
 
-// Welcome → Sign in → WP login → Connect → back home.
+// Welcome → in-app sign-in → home.
 await page.goto("http://localhost:3000/");
 await page.screenshot({ path: `${SHOTS}/1-welcome.png` });
-await page.getByRole("link", { name: "Sign in" }).click();
-await page.waitForURL(/wp-login\.php/);
-step("redirected to WordPress login");
-await page.fill("#user_login", "editor1");
-await page.fill("#user_pass", "pass1");
-await page.click("#wp-submit");
-await page.waitForSelector("text=Connect your website");
-await page.screenshot({ path: `${SHOTS}/2-connect.png` });
-await page.getByRole("button", { name: "Connect" }).click();
+// In-app sign-in: a wrong password first, then the right one.
+await page.fill('input[name="username"]', "editor1");
+await page.fill('input[name="password"]', "wrong-password");
+await page.getByRole("button", { name: "Sign in" }).click();
+await page.waitForSelector("text=Incorrect username or password.");
+step("wrong password rejected in-app");
+await page.screenshot({ path: `${SHOTS}/2-login-error.png` });
+await page.fill('input[name="password"]', "pass1");
+await page.getByRole("button", { name: "Sign in" }).click();
 await page.waitForURL("http://localhost:3000/home");
 await page.waitForSelector("text=Your team");
 step("signed in, home shows: " + (await page.locator("header a").first().innerText()));

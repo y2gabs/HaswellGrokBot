@@ -1,13 +1,19 @@
 === Haswell Bots Companion ===
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPL-2.0-or-later
 
 The WordPress side of the Haswell Bots web app.
 
 == Description ==
 
+* In-app sign-in: POST haswell-bots/v1/login checks a WordPress username (or
+  email) and password with wp_authenticate() and returns an Application
+  Password for the user's Editor subsite. If they edit several, it returns the
+  list plus a single-use ticket for POST haswell-bots/v1/login/site. Only
+  callers with the client secret can use it. Failed attempts are rate limited
+  per username (5) and per visitor IP (20) for 15 minutes.
 * "Connect your website" sign-in on the network's main site
   (/?haswell_bots_connect=1). After a normal WordPress login it lists the
   subsites where the user is an Editor or above and mints an Application
@@ -41,3 +47,11 @@ Optional pins, if a site's settings posts can't be detected:
 
 Filters: haswell_bots_capability, haswell_bots_eligible_sites,
 haswell_bots_types, haswell_bots_settings_posts.
+
+== Changelog ==
+
+= 0.2.0 =
+* In-app sign-in (haswell-bots/v1/login and login/site) with rate limiting.
+
+= 0.1.0 =
+* First release.

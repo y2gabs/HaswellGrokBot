@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Haswell Bots Companion
  * Plugin URI:        https://github.com/y2gabs/HaswellGrokBot
- * Description:       WordPress side of the Haswell Bots web app: "Connect your website" sign-in, private chat history, and the REST routes the bots use to edit website_settings, services, team members, partners and announcements.
- * Version:           0.1.0
+ * Description:       WordPress side of the Haswell Bots web app: in-app sign-in (or the "Connect your website" page), private chat history, and the REST routes the bots use to edit website_settings, services, team members, partners and announcements.
+ * Version:           0.2.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Network:           true
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'HASWELL_BOTS_VERSION', '0.1.0' );
+define( 'HASWELL_BOTS_VERSION', '0.2.0' );
 define( 'HASWELL_BOTS_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once HASWELL_BOTS_DIR . 'includes/class-fields.php';
@@ -28,6 +28,7 @@ require_once HASWELL_BOTS_DIR . 'includes/class-content.php';
 require_once HASWELL_BOTS_DIR . 'includes/class-schema.php';
 require_once HASWELL_BOTS_DIR . 'includes/class-threads.php';
 require_once HASWELL_BOTS_DIR . 'includes/class-connect.php';
+require_once HASWELL_BOTS_DIR . 'includes/class-login.php';
 
 /**
  * Permission shared by every bots route: Editors and up on this subsite.
@@ -54,5 +55,6 @@ add_action(
 		Haswell_Bots_Schema::instance();
 		Haswell_Bots_Threads::instance();
 		Haswell_Bots_Connect::instance();
+		Haswell_Bots_Login::instance();
 	}
 );

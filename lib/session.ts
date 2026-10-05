@@ -15,6 +15,8 @@ export type Session = {
 
 export const SESSION_COOKIE = "hb_session";
 export const STATE_COOKIE = "hb_state";
+/** Holds the site-choice ticket between the two in-app sign-in steps. */
+export const TICKET_COOKIE = "hb_ticket";
 const MAX_AGE = 60 * 60 * 24 * 30;
 
 function key(): Buffer {

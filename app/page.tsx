@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { Blob } from "@/components/Blob";
+import { LoginForm } from "@/components/LoginForm";
+import { env } from "@/lib/env";
 import { BOTS } from "@/lib/bots";
 import { getSession } from "@/lib/session";
 
@@ -19,7 +21,7 @@ export default async function Welcome(props: PageProps<"/">) {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
-      <div className="relative my-auto h-80 w-full">
+      <div className="relative my-auto h-64 w-full">
         {crowd.map((b, i) => (
           <div key={i} className="floaty absolute" style={{ left: b.x, top: b.y, animationDelay: b.d }}>
             <Blob color={b.color} accent={b.accent} size={b.size} variant={b.v} />
@@ -33,14 +35,8 @@ export default async function Welcome(props: PageProps<"/">) {
       <div className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">Haswell Bots</h1>
         <p className="mt-2 text-muted">Your team of always-on agents that keep your website fresh — and always ask before changing anything.</p>
-        {error ? <p className="mt-4 rounded-2xl bg-panel px-4 py-3 text-sm text-bad">{error}</p> : null}
-        <a
-          href="/api/auth/start"
-          className="mt-8 block w-full rounded-full bg-text py-4 text-center font-semibold text-bg transition active:scale-[.98]"
-        >
-          Sign in
-        </a>
-        <p className="mt-3 text-xs text-faint">Sign in with your website account.</p>
+        <LoginForm lostPasswordUrl={`${env.wpNetworkUrl()}/wp-login.php?action=lostpassword`} initialError={error} />
+        <p className="mt-4 text-xs text-faint">Use the same login as your website.</p>
       </div>
     </main>
   );

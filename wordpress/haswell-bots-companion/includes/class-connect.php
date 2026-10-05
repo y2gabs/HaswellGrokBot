@@ -95,6 +95,76 @@ class Haswell_Bots_Connect {
 	}
 
 	/**
+	 * Whether a request carries this network's client secret.
+	 *
+	 * @param mixed $secret Secret from the request.
+	 * @return bool
+	 */
+	public static function client_ok( $secret ) {
+		return self::is_configured() && hash_equals( self::client_secret(), (string) $secret );
+	}
+
+	/**
+	 * Mint an Application Password for a user, named after the site it is for.
+	 *
+	 * @param WP_User $user User.
+	 * @param array   $site Eligible site { id, name, url }.
+	 * @return array|WP_Error { password, uuid }
+	 */
+	public static function mint( $user, $site ) {
+		$created = WP_Application_Passwords::create_new_application_password(
+			$user->ID,
+			array(
+				'name' => sprintf( '%s — %s', self::APP_NAME, $site['name'] ),
+			)
+		);
+		if ( is_wp_error( $created ) ) {
+			return $created;
+		}
+		return array(
+			'password' => $created[0],
+			'uuid'     => $created[1]['uuid'],
+		);
+	}
+
+	/**
+	 * What the app receives once a user is signed in to a site: the site, who
+	 * they are there, and the credential.
+	 *
+	 * @param WP_User $user     User.
+	 * @param int     $blog_id  Site id.
+	 * @param array   $password { password, uuid } from mint().
+	 * @return array
+	 */
+	public static function credential( $user, $blog_id, $password ) {
+		if ( is_multisite() ) {
+			switch_to_blog( $blog_id );
+		}
+		$roles = (array) ( new WP_User( $user->ID ) )->roles;
+		$site  = array(
+			'id'      => (int) $blog_id,
+			'name'    => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+			'url'     => home_url(),
+			'restUrl' => get_rest_url(),
+		);
+		if ( is_multisite() ) {
+			restore_current_blog();
+		}
+
+		return array(
+			'site'        => $site,
+			'user'        => array(
+				'id'          => (int) $user->ID,
+				'username'    => $user->user_login,
+				'displayName' => $user->display_name,
+				'email'       => $user->user_email,
+				'role'        => $roles ? reset( $roles ) : '',
+			),
+			'appPassword' => $password,
+		);
+	}
+
+	/**
 	 * Sites the user can connect: those where they can edit posts. Editors and
 	 * administrators qualify; authors and subscribers do not, because the bots
 	 * edit other people's content and the site settings.
@@ -225,17 +295,10 @@ class Haswell_Bots_Connect {
 			$this->page( 'Choose a site', '<p>That site is not one you can connect. Go back and pick again.</p>' );
 		}
 
-		$created = WP_Application_Passwords::create_new_application_password(
-			$user->ID,
-			array(
-				'name' => sprintf( '%s — %s', self::APP_NAME, $site['name'] ),
-			)
-		);
-		if ( is_wp_error( $created ) ) {
-			$this->page( 'Could not connect', '<p>' . esc_html( $created->get_error_message() ) . '</p>' );
+		$minted = self::mint( $user, $site );
+		if ( is_wp_error( $minted ) ) {
+			$this->page( 'Could not connect', '<p>' . esc_html( $minted->get_error_message() ) . '</p>' );
 		}
-
-		list( $password, $item ) = $created;
 
 		$code = wp_generate_password( 48, false, false );
 		set_site_transient(
@@ -243,8 +306,8 @@ class Haswell_Bots_Connect {
 			array(
 				'user_id'  => (int) $user->ID,
 				'blog_id'  => (int) $site['id'],
-				'password' => $password,
-				'uuid'     => $item['uuid'],
+				'password' => $minted['password'],
+				'uuid'     => $minted['uuid'],
 			),
 			self::CODE_TTL
 		);
@@ -378,7 +441,7 @@ class Haswell_Bots_Connect {
 		if ( ! self::is_configured() ) {
 			return new WP_Error( 'haswell_bots_unconfigured', 'Sign-in is not configured.', array( 'status' => 503 ) );
 		}
-		if ( ! hash_equals( self::client_secret(), (string) $request->get_param( 'client_secret' ) ) ) {
+		if ( ! self::client_ok( $request->get_param( 'client_secret' ) ) ) {
 			return new WP_Error( 'haswell_bots_bad_client', 'Unknown client.', array( 'status' => 401 ) );
 		}
 
@@ -396,38 +459,14 @@ class Haswell_Bots_Connect {
 			return new WP_Error( 'haswell_bots_bad_code', 'This sign-in has expired. Please sign in again.', array( 'status' => 400 ) );
 		}
 
-		$blog_id = (int) $data['blog_id'];
-		$role    = '';
-		if ( is_multisite() ) {
-			switch_to_blog( $blog_id );
-		}
-		$site_user = new WP_User( $user->ID );
-		$roles     = (array) $site_user->roles;
-		$role      = $roles ? reset( $roles ) : '';
-		$site      = array(
-			'id'      => $blog_id,
-			'name'    => html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-			'url'     => home_url(),
-			'restUrl' => get_rest_url(),
-		);
-		if ( is_multisite() ) {
-			restore_current_blog();
-		}
-
 		return rest_ensure_response(
-			array(
-				'site'        => $site,
-				'user'        => array(
-					'id'          => (int) $user->ID,
-					'username'    => $user->user_login,
-					'displayName' => $user->display_name,
-					'email'       => $user->user_email,
-					'role'        => $role,
-				),
-				'appPassword' => array(
+			self::credential(
+				$user,
+				(int) $data['blog_id'],
+				array(
 					'password' => $data['password'],
 					'uuid'     => $data['uuid'],
-				),
+				)
 			)
 		);
 	}

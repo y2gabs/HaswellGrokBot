@@ -30,12 +30,23 @@ Browser ─► Next.js app (this repo, on the VPS)
 
 ## How it fits together
 
-**Sign-in.** "Sign in" sends the user to the network's main site, where they
-log in with their normal WordPress account. A "Connect your website" page then
-lists the subsites where they are an **Editor** or above. Connecting mints an
-Application Password, which reaches this app's server through a single-use
-code. It lives only in an encrypted, httpOnly cookie, so each user is
-automatically set up for their own subsite. Signing out revokes it.
+**Sign-in.** Users sign in on the app's own screen with their normal WordPress
+username (or email) and password. The app's server passes these, with the
+client secret, to the companion plugin (`haswell-bots/v1/login`), which checks
+them with WordPress's own login check. The plugin then finds the subsites where
+the user is an **Editor** or above. With one site, the user goes straight to the
+home screen; with several, they pick one first. The plugin mints an Application
+Password for that site. It lives only in an encrypted, httpOnly cookie, so each
+user is automatically set up for their own subsite. Signing out revokes it.
+
+- The password is used once and never stored.
+- After 5 failed attempts for a username (or 20 from one visitor) within 15
+  minutes, sign-in is locked for that username or visitor, and the error never
+  reveals whether an account exists.
+- "Forgot password?" opens WordPress's own reset page.
+- "Use your website's sign-in page" falls back to WordPress's login page and
+  a "Connect your website" page, for sites that need two-factor or social login
+  there.
 
 **Bots.** A turn is a DeepSeek tool loop (`lib/agent/loop.ts`), with three
 kinds of tools (`lib/agent/tools.ts`):
