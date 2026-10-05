@@ -1,16 +1,15 @@
-# /etc/systemd/system/haswell-bots.service
+# /etc/systemd/system/haswell-bots.service — HestiaCP layout (see README).
 [Unit]
 Description=Haswell Bots (Next.js)
 After=network.target
 
 [Service]
-Type=simple
-User=haswellbots
-WorkingDirectory=/opt/haswell-bots/current
-EnvironmentFile=/opt/haswell-bots/.env
-Environment=NODE_ENV=production
-Environment=PORT=3100
+User=haswell
+WorkingDirectory=/home/haswell/web/bots.haswell.app/private/app
+EnvironmentFile=/home/haswell/web/bots.haswell.app/private/.env
+Environment=PORT=3200
 Environment=HOSTNAME=127.0.0.1
+Environment=NODE_ENV=production
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=3

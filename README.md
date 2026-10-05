@@ -119,16 +119,48 @@ npm run dev                  # http://localhost:3000
 
 ### 3. Deploy to the VPS (HestiaCP)
 
-1. In HestiaCP, add `bots.<domain>` with Let's Encrypt SSL. Then add the
-   `location /` block from `deploy/nginx-haswell-bots.conf` to its custom
-   nginx config.
-2. Create a `haswellbots` system user and `/opt/haswell-bots/.env` from
-   `.env.example`, with `DATA_DIR=/opt/haswell-bots/data`.
-3. Install `deploy/haswell-bots.service` into `/etc/systemd/system/` and run
-   `systemctl enable haswell-bots`.
-4. From a checkout of this repo on the server, run `sudo ./deploy/deploy.sh`.
-   It builds, copies a standalone release into `/opt/haswell-bots/releases/`
-   and restarts the service.
+Layout on the server (user `haswell`, app on port 3200):
+
+```
+/home/haswell/web/bots.haswell.app/
+├── public_html/   empty: nginx forwards everything to the app
+└── private/
+    ├── .env       keys and secrets (chmod 600)
+    ├── src/       git clone of this repo (main)
+    ├── app/       the running build (made by deploy/update.sh)
+    └── data/      image candidates
+```
+
+One-time setup:
+
+1. **Deploy key.** Run `ssh-keygen -t ed25519 -f /root/.ssh/haswellgrokbot -N ""`
+   and add the `.pub` file as a read-only deploy key on GitHub. Then add a
+   `Host github-haswellgrokbot` entry to `/root/.ssh/config` that uses it.
+2. **Code.** `git clone git@github-haswellgrokbot:y2gabs/HaswellGrokBot.git private/src`.
+3. **Settings.** Create `private/.env` from `.env.example`, with
+   `DATA_DIR=/home/haswell/web/bots.haswell.app/private/data`.
+4. **Service.** Copy `deploy/haswell-bots.service` to `/etc/systemd/system/`,
+   then run `systemctl enable haswell-bots`.
+5. **nginx.** Make a HestiaCP proxy template from `default.tpl`/`default.stpl`
+   with `proxy_pass http://127.0.0.1:3200;`, as in
+   `deploy/nginx-haswell-bots.conf`. Apply it with
+   `v-change-web-domain-proxy-tpl haswell bots.haswell.app haswellbots`, and turn
+   on Let's Encrypt SSL and SSL force.
+
+Every update after that (as root):
+
+```bash
+/home/haswell/web/bots.haswell.app/private/src/deploy/update.sh
+```
+
+The script does five things in order:
+
+1. Pulls `main`.
+2. Builds. If the build fails, the running app is untouched.
+3. Swaps in the new build and restarts the service.
+4. Checks the app answers, and rolls back to the previous build if it doesn't.
+5. Installs `wordpress/haswell-bots-companion` into
+   `/home/haswell/web/haswell.app/public_html/wp-content/plugins/`.
 
 ## Checks
 
