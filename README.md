@@ -1,102 +1,83 @@
-# Haswell Bots
+# WordPress chat assistants
 
-A mobile-first web app, modelled on Grok Bot, that gives each Haswell site
-owner a team of chat "teammates" for their WordPress subsite. Each bot does the
+A mobile-first web app that gives site owners on a WordPress multisite network a
+small team of AI chat assistants for their own site. Each assistant does its
 work conversationally and **always asks before changing anything**.
 
-- **Marketing** suggests three announcement ideas and writes the article you
-  pick. It then makes three featured-image options and, once you approve, posts
-  the result to your site's **Announcements**.
-- **Website Manager** changes your **website settings**: the ACF fields on the
-  `website_settings` posts, such as company name, short and long tagline,
-  phone, email and images. It also adds, changes and removes **services**,
-  **team members** and **partners**. You can attach photos in the chat for
-  image fields.
+- **Marketing** suggests a few post ideas and writes the one you pick. It then
+  offers featured-image options and, once you approve, publishes the post.
+- **Website Manager** updates site settings and adds, changes or removes
+  content items (for example services, team members and partners) through
+  conversation. You can attach photos in the chat for image fields.
 
-To dictate, tap the **mic** in the message box. It uses the browser's own
-speech recognition, so words appear as you speak and it costs nothing. It works
-in Chrome, Edge and Safari/iOS; Firefox doesn't have it, so the button is
-hidden there. Dictation only fills the box: you still review it and tap Send.
-The audio goes to the browser's speech service (Google in Chrome, Apple in
-Safari), not through this app, and the site must be served over HTTPS.
+You can type or dictate. The mic button uses the browser's built-in speech
+recognition (Chrome, Edge, Safari/iOS; hidden where unsupported). Dictation
+only fills the message box, so you still review it and tap Send.
 
 ```
-Browser ─► Next.js app (this repo, on the VPS)
-             ├─ DeepSeek V4 Flash: orchestration and writing
-             ├─ OpenAI / Gemini: featured images
-             └─ user's subsite REST, as the user (Application Password)
-                  └─ wordpress/haswell-bots-companion (this repo)
+Browser ─► Next.js app (this repo)
+             ├─ LLM (DeepSeek by default): orchestration and writing
+             ├─ Image model (OpenAI or Gemini): featured images
+             └─ the user's subsite REST API, as that user
+                  └─ companion WordPress plugin (wordpress/, this repo)
 ```
 
-## How it fits together
+## How it works
 
-**Sign-in.** Users sign in on the app's own screen with their normal WordPress
-username (or email) and password. The app's server passes these, with the
-client secret, to the companion plugin (`haswell-bots/v1/login`), which checks
-them with WordPress's own login check. The plugin then finds the subsites where
-the user is an **Editor** or above. With one site, the user goes straight to the
-home screen; with several, they pick one first. The plugin mints an Application
-Password for that site. It lives only in an encrypted, httpOnly cookie, so each
-user is automatically set up for their own subsite. Signing out revokes it.
+**Sign-in.** Users sign in on the app's own screen with their WordPress
+username (or email) and password. The app's server passes these to the
+companion plugin, which checks them with WordPress's own login and finds the
+subsites where the user is an Editor or above. The user picks a site if there
+are several. The plugin then issues an Application Password for that site.
+The app keeps it only in an encrypted, httpOnly cookie, and signing out
+revokes it.
 
 - The password is used once and never stored.
-- After 5 failed attempts for a username (or 20 from one visitor) within 15
-  minutes, sign-in is locked for that username or visitor, and the error never
-  reveals whether an account exists.
-- "Forgot password?" opens WordPress's own reset page.
-- "Use your website's sign-in page" falls back to WordPress's login page and
-  a "Connect your website" page, for sites that need two-factor or social login
-  there.
+- Failed attempts are rate limited, and errors don't reveal whether an account
+  exists.
+- A fallback link uses WordPress's own login page, for sites that need
+  two-factor or social login.
 
-**Bots.** A turn is a DeepSeek tool loop (`lib/agent/loop.ts`), with three
+**Assistants.** Each turn is an LLM tool loop (`lib/agent/loop.ts`) with three
 kinds of tools (`lib/agent/tools.ts`):
 
-- **Read tools** run straight away: settings, content lists and site context.
-- **UI tools** end the turn with a card for the user to act on: idea chips or
-  the image picker.
-- **Proposal tools never write.** Each one first validates the change with the
-  companion's `dryRun`. It then stores the exact request and shows an
-  **approval card** with the before and after. Only **Approve** runs it
-  (`lib/agent/actions.ts`), and it runs the stored request, not anything the
-  model says afterwards.
+- **Read tools** run straight away.
+- **UI tools** end the turn with a card for the user to act on, such as idea
+  choices or an image picker.
+- **Proposal tools never write.** Each one validates the change with the
+  plugin's dry run, stores the exact request and shows an approval card with
+  the before and after. Only **Approve** runs it, and it runs the stored
+  request, not anything the model says afterwards.
 
-**History.** Conversations are private posts on the user's own subsite (via
-the companion plugin), so the app has no database. Turns run on the server
-after the request returns, and the thread is saved after every step. If you
-close the app mid-task, the finished result is waiting when you come back.
+**History.** Conversations are stored as private posts on the user's own
+subsite, so the app needs no database. Turns run on the server and are saved
+after every step, so closing the app mid-task doesn't lose the result.
 
 ## Repository layout
 
 | Path | What |
 | --- | --- |
-| `app/` | Pages (`/`, `/home`, `/chat/[id]`), the auth callback and the API routes |
-| `components/` | Mascot, home screen, chat screen and cards (choices, article, images, approval) |
-| `lib/agent/` | Tool loop, tools, system prompts, approve/decline and image pick |
-| `lib/ai/` | DeepSeek client, writing briefs (ported from the admin plugin), image generation |
-| `lib/wp/client.ts` | REST client for the user's subsite |
-| `wordpress/haswell-bots-companion/` | The WordPress plugin (network-activate it) |
-| `deploy/` | systemd unit, nginx snippet and deploy script for the HestiaCP VPS |
-| `tests/` | Unit tests, including the approval gate (Vitest) |
+| `app/` | Pages and API routes |
+| `components/` | UI: home screen, chat screen, sign-in and cards |
+| `lib/agent/` | Tool loop, tools, system prompts, approvals |
+| `lib/ai/` | LLM client, writing prompts, image generation |
+| `lib/wp/` | REST and sign-in clients for WordPress |
+| `wordpress/` | Companion WordPress plugin (network-activate it) |
+| `deploy/` | Example systemd unit, nginx snippet and update script |
+| `tests/` | Unit tests (Vitest) |
 | `e2e/` | End-to-end run against a throwaway WordPress multisite |
 
 ## Setup
 
 ### 1. WordPress (once per network)
 
-1. Upload `wordpress/haswell-bots-companion` to `wp-content/plugins/` and
+1. Upload the plugin folder in `wordpress/` to `wp-content/plugins/` and
    **Network Activate** it. ACF must be active.
-2. Add to `wp-config.php`:
-   ```php
-   define( 'HASWELL_BOTS_APP_URL', 'https://bots.example.com' );
-   define( 'HASWELL_BOTS_CLIENT_SECRET', '<32+ random characters>' ); // openssl rand -hex 32
-   ```
-3. Make sure Application Passwords aren't disabled by a security plugin. They
-   need HTTPS.
-4. Add each user to their subsite with the **Editor** role.
-
-If a site's settings posts can't be detected, pin them with
-`HASWELL_SETTINGS_POST_PROFILE`, `_CONTACT` and `_MEDIA`, the same constants
-the admin app uses.
+2. Add the app URL and a shared client secret to `wp-config.php`. The constant
+   names are at the top of `wordpress/*/includes/class-connect.php`. Generate
+   the secret with `openssl rand -hex 32`.
+3. Make sure Application Passwords are enabled. They need HTTPS.
+4. Give each user the **Editor** role on their subsite.
 
 ### 2. The app
 
@@ -106,78 +87,30 @@ npm install
 npm run dev                  # http://localhost:3000
 ```
 
-| Variable | Purpose |
-| --- | --- |
-| `APP_URL` | This app's public URL. Must match `HASWELL_BOTS_APP_URL`. |
-| `WP_NETWORK_URL` | The network's main site |
-| `HASWELL_BOTS_CLIENT_SECRET` | Same value as in wp-config |
-| `SESSION_SECRET` | 32+ random characters; encrypts the session cookie |
-| `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | Orchestration and writing (default `deepseek-v4-flash`) |
-| `DEEPSEEK_WRITER_MODEL` | Optional; e.g. `deepseek-v4-pro` for the articles only |
-| `OPENAI_API_KEY` or `GEMINI_API_KEY` | Featured images (OpenAI `gpt-image-1-mini`, low quality, by default) |
-| `DATA_DIR` | Where image candidates wait until one is picked. Use an absolute path in production. |
+`.env.example` lists every setting: the app URL, the network URL, the shared
+client secret, a session secret, and the LLM and image API keys.
 
-### 3. Deploy to the VPS (HestiaCP)
+### 3. Deploy
 
-Layout on the server (user `haswell`, app on port 3200):
+Any Node 20+ host works. The app builds as a standalone server
+(`npm run build`, then `node .next/standalone/server.js`), placed behind
+nginx with HTTPS.
 
-```
-/home/haswell/web/bots.haswell.app/
-├── public_html/   empty: nginx forwards everything to the app
-└── private/
-    ├── .env       keys and secrets (chmod 600)
-    ├── src/       git clone of this repo (main)
-    ├── app/       the running build (made by deploy/update.sh)
-    └── data/      image candidates
-```
+`deploy/` has an example systemd unit, an nginx snippet and `update.sh`. The
+script pulls the latest code, builds, swaps in the new build, restarts the
+service, checks it answers (rolling back if not) and installs the plugin.
+Adjust the paths at the top of `update.sh` for your server; they can also be
+set as environment variables.
 
-One-time setup:
-
-1. **Deploy key.** Run `ssh-keygen -t ed25519 -f /root/.ssh/haswellgrokbot -N ""`
-   and add the `.pub` file as a read-only deploy key on GitHub. Then add a
-   `Host github-haswellgrokbot` entry to `/root/.ssh/config` that uses it.
-2. **Code.** `git clone git@github-haswellgrokbot:y2gabs/HaswellGrokBot.git private/src`.
-3. **Settings.** Create `private/.env` from `.env.example`, with
-   `DATA_DIR=/home/haswell/web/bots.haswell.app/private/data`.
-4. **Service.** Copy `deploy/haswell-bots.service` to `/etc/systemd/system/`,
-   then run `systemctl enable haswell-bots`.
-5. **nginx.** Make a HestiaCP proxy template from `default.tpl`/`default.stpl`
-   with `proxy_pass http://127.0.0.1:3200;`, as in
-   `deploy/nginx-haswell-bots.conf`. Apply it with
-   `v-change-web-domain-proxy-tpl haswell bots.haswell.app haswellbots`, and turn
-   on Let's Encrypt SSL and SSL force.
-
-Every update after that (as root):
-
-```bash
-/home/haswell/web/bots.haswell.app/private/src/deploy/update.sh
-```
-
-The script does five things in order:
-
-1. Pulls `main`.
-2. Builds. If the build fails, the running app is untouched.
-3. Swaps in the new build and restarts the service.
-4. Checks the app answers, and rolls back to the previous build if it doesn't.
-5. Installs `wordpress/haswell-bots-companion` into
-   `/home/haswell/web/haswell.app/public_html/wp-content/plugins/`.
+Keep secrets out of the repo. They belong in `.env` on the server and in
+`wp-config.php`.
 
 ## Checks
 
 ```bash
-npm run lint && npm run typecheck && npm test   # unit tests
+npm run lint && npm run typecheck && npm test
 npm run build
 ```
 
-`e2e/README.md` describes the full browser run. It covers the real WordPress
-sign-in, approving a tagline change, and the whole Marketing flow through
-publishing, against a throwaway multisite with a scripted AI.
-
-## Why DeepSeek V4 Flash
-
-It's among the cheapest models with dependable OpenAI-style tool calling, and
-the admin plugin already uses it for writing. Every change waits behind an
-approval card that runs a validated, stored request, so a cheap model's
-occasional misstep costs a declined card, not a broken site. For better
-writing at a few times the cost, set `DEEPSEEK_WRITER_MODEL=deepseek-v4-pro`
-(or `DEEPSEEK_MODEL` for both).
+`e2e/README.md` describes the browser test. It runs against a throwaway
+multisite with a scripted AI.

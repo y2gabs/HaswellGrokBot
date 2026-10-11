@@ -4,7 +4,7 @@ Requires PHP: 7.4
 Stable tag: 0.2.0
 License: GPL-2.0-or-later
 
-The WordPress side of the Haswell Bots web app.
+Companion plugin for the WordPress chat assistants web app in this repository.
 
 == Description ==
 
