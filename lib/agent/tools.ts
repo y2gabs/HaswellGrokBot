@@ -508,7 +508,7 @@ async function writeArticle(ctx: ToolContext, args: Args): Promise<ToolOutcome> 
   const html = cleanHtml(await write(ANNOUNCEMENT_SYSTEM_PROMPT, prompt, { maxTokens: 2000, temperature: 1.3 }));
 
   ctx.thread.state.draft = { ...draft, subject, html };
-  if (ctx.thread.title === "New conversation" || ctx.thread.title === "Marketing") ctx.thread.title = subject;
+  if (["New conversation", "Marketing", "Article Author"].includes(ctx.thread.title)) ctx.thread.title = subject;
 
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return {

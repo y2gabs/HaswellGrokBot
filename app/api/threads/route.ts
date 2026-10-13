@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         }),
       );
     } else {
-      // Bots that open with suggestions (Marketing) start working right away.
+      // Bots that open with suggestions (Article Author) start working right away.
       thread.messages.push(newMessage({ role: "event", content: "The user opened a new conversation.", hidden: true }));
       thread.state = { busy: true, step: "Thinking…", startedAt: new Date().toISOString() };
       after(() => runTurn(auth.session, thread.id));

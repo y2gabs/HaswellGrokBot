@@ -18,7 +18,7 @@ The run checks each of these:
 - Sign-in goes through WordPress and lands on the home screen.
 - Nothing is written before the user taps Approve.
 - The long tagline really changes after approval.
-- The Marketing flow (three ideas → article → image pick → approve) creates a
+- The Article Author flow (three ideas → article → image pick → approve) creates a
   published announcement with its featured image.
 - Signing out revokes the Application Password.
 

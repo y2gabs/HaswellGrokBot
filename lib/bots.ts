@@ -4,9 +4,14 @@ import type { BotId } from "./types";
  * Bot catalogue: everything the UI needs to show a bot. Safe to import from
  * client components (no secrets, no server code).
  */
+/** Sections of the assistant list, in display order. */
+export const BOT_GROUPS = ["Website", "Marketing", "Operations", "Customers"] as const;
+export type BotGroup = (typeof BOT_GROUPS)[number];
+
 export type BotMeta = {
   id: BotId;
   name: string;
+  group: BotGroup;
   tagline: string;
   description: string;
   /** Blob mascot colors: body and its highlight. */
@@ -20,7 +25,8 @@ export type BotMeta = {
 export const BOTS: BotMeta[] = [
   {
     id: "marketing",
-    name: "Marketing",
+    name: "Article Author",
+    group: "Marketing",
     tagline: "Writes and publishes your announcements",
     description:
       "Suggests three ideas, writes the article you pick, makes a featured image, and posts it once you approve.",
@@ -31,6 +37,7 @@ export const BOTS: BotMeta[] = [
   {
     id: "website-manager",
     name: "Website Manager",
+    group: "Website",
     tagline: "Updates your website for you",
     description:
       "Changes your website settings, services, team members and partners — just tell it what you need.",

@@ -39,7 +39,7 @@ function decide(body) {
     // Writer call.
     return reply("<p>Winter is hard on pipes.</p><h2>Simple steps</h2><ul><li>Insulate exposed pipes</li><li>Keep a tap dripping</li></ul><p>Call us if anything freezes.</p>");
   }
-  const marketing = system.includes("Marketing bot");
+  const marketing = system.includes("Article Author");
   if (marketing) {
     if (last.role === "user" && last.content.includes("opened a new conversation")) return reply("", [call("get_site_context", {})]);
     if (last.role === "tool" && msgs.at(-2).tool_calls?.[0].function.name === "get_site_context") {
