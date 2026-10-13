@@ -108,7 +108,7 @@ export function LoginForm({ lostPasswordUrl, initialError }: { lostPasswordUrl: 
         aria-label="Username or email"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        className="block w-full rounded-2xl border border-line bg-panel px-4 py-3.5 outline-none placeholder:text-faint focus:border-zinc-500"
+        className="block w-full rounded-2xl border border-line bg-panel px-4 py-3.5 outline-none placeholder:text-faint focus:border-[var(--faint)]"
       />
       <input
         name="password"
@@ -118,7 +118,7 @@ export function LoginForm({ lostPasswordUrl, initialError }: { lostPasswordUrl: 
         aria-label="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="block w-full rounded-2xl border border-line bg-panel px-4 py-3.5 outline-none placeholder:text-faint focus:border-zinc-500"
+        className="block w-full rounded-2xl border border-line bg-panel px-4 py-3.5 outline-none placeholder:text-faint focus:border-[var(--faint)]"
       />
       {error ? <p className="rounded-2xl bg-panel px-4 py-3 text-sm text-bad">{error}</p> : null}
       <button

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Blob } from "./Blob";
 import { ApprovalCard, ArticleCard, ChoiceChips, ImagePicker } from "./Cards";
+import { ThemeToggle } from "./ThemeToggle";
 import { BOTS, botMeta } from "@/lib/bots";
 import { api } from "@/lib/client";
 import { useDictation } from "@/lib/dictation";
@@ -243,10 +244,11 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
           <p className="truncate font-semibold">{meta.name}</p>
           <p className="truncate text-xs text-faint">{siteName}</p>
         </div>
+        <ThemeToggle className="ml-auto h-9 w-9 md:hidden" />
         <button
           onClick={newConversation}
           disabled={!thread || starting || busy}
-          className="ml-auto flex h-9 items-center gap-1.5 rounded-full bg-panel px-3 text-sm text-muted hover:bg-panel-2 disabled:opacity-50"
+          className="flex h-9 items-center gap-1.5 rounded-full bg-panel px-3 md:ml-auto text-sm text-muted hover:bg-panel-2 disabled:opacity-50"
           aria-label="New conversation"
           title="New conversation"
         >

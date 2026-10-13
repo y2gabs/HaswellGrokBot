@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Blob } from "@/components/Blob";
 import { LoginForm } from "@/components/LoginForm";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { env } from "@/lib/env";
 import { BOTS } from "@/lib/bots";
 import { getSession } from "@/lib/session";
@@ -20,7 +21,8 @@ export default async function Welcome(props: PageProps<"/">) {
   ];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+    <main className="relative mx-auto flex min-h-dvh max-w-md flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))]">
+      <ThemeToggle className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10" />
       <div className="relative my-auto h-64 w-full">
         {crowd.map((b, i) => (
           <div key={i} className="floaty absolute" style={{ left: b.x, top: b.y, animationDelay: b.d }}>
@@ -28,7 +30,7 @@ export default async function Welcome(props: PageProps<"/">) {
           </div>
         ))}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <Blob color="#f4f4f5" accent="#ffffff" size={120} />
+          <Blob color="var(--hero)" accent="var(--hero-accent)" size={120} />
         </div>
       </div>
 

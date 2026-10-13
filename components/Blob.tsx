@@ -21,6 +21,7 @@ const SHAPES = [
 export function Blob({ color, accent, size = 56, variant = 0, className, busy }: Props) {
   const shape = SHAPES[variant % SHAPES.length];
   const dx = busy ? 3 : 0;
+  const gid = `g-${color.replace(/[^a-z0-9]/gi, "")}-${variant}`;
   return (
     <svg
       width={size}
@@ -31,12 +32,12 @@ export function Blob({ color, accent, size = 56, variant = 0, className, busy }:
       style={{ filter: "drop-shadow(0 6px 14px rgba(0,0,0,.35))" }}
     >
       <defs>
-        <radialGradient id={`g-${color.slice(1)}-${variant}`} cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor={accent ?? color} />
-          <stop offset="100%" stopColor={color} />
+        <radialGradient id={gid} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" style={{ stopColor: accent ?? color }} />
+          <stop offset="100%" style={{ stopColor: color }} />
         </radialGradient>
       </defs>
-      <path d={shape} fill={`url(#g-${color.slice(1)}-${variant})`} />
+      <path d={shape} fill={`url(#${gid})`} />
       <g className={busy ? "blob-eyes-busy" : "blob-eyes"}>
         <ellipse cx={40 + dx} cy={44} rx={6} ry={9} fill="#0b0b0c" />
         <ellipse cx={62 + dx} cy={44} rx={6} ry={9} fill="#0b0b0c" />

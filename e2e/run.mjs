@@ -15,6 +15,9 @@ const step = (s) => console.log("•", s);
 // Welcome → in-app sign-in → home.
 await page.goto("http://localhost:3000/");
 await page.screenshot({ path: `${SHOTS}/1-welcome.png` });
+// Fail loudly if the stylesheet didn't load (the page would still "work" unstyled).
+const radius = await page.getByRole("button", { name: "Sign in" }).evaluate((el) => getComputedStyle(el).borderRadius);
+if (!radius || radius === "0px") throw new Error("Styles are missing: the Sign in button has no rounded corners.");
 // In-app sign-in: a wrong password first, then the right one.
 await page.fill('input[name="username"]', "editor1");
 await page.fill('input[name="password"]', "wrong-password");

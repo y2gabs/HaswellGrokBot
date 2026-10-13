@@ -42,7 +42,7 @@ export function ArticleCard({ card }: { card: ArticleCardT }) {
         <p className="text-xs uppercase tracking-wide text-faint">Draft article</p>
         <h3 className="mt-1 text-lg font-semibold leading-snug">{card.title}</h3>
       </div>
-      <div className={`article relative px-4 pt-3 text-sm leading-relaxed text-zinc-300 ${open ? "" : "max-h-48 overflow-hidden"}`}>
+      <div className={`article relative px-4 pt-3 text-sm leading-relaxed text-[var(--prose)] ${open ? "" : "max-h-48 overflow-hidden"}`}>
         <div dangerouslySetInnerHTML={{ __html: card.html }} />
         {open ? null : <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--panel)]" />}
       </div>
@@ -84,13 +84,13 @@ export function ImagePicker({
                 }
               }}
               className={`relative aspect-[3/2] overflow-hidden rounded-xl ring-2 transition ${
-                isPicked ? "ring-white" : "ring-transparent"
+                isPicked ? "ring-[var(--text)]" : "ring-transparent"
               } ${faded ? "opacity-30" : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/api/images/${card.token}/${i}`} alt={`Option ${i + 1}`} className="h-full w-full object-cover" />
               {choosing === i ? (
-                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs">Saving…</span>
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs text-white">Saving…</span>
               ) : null}
             </button>
           );
@@ -145,7 +145,7 @@ export function ApprovalCard({
             <div key={c.field}>
               <dt className="text-xs text-faint">{c.label}</dt>
               {c.before !== undefined ? (
-                <dd className="mt-0.5 text-muted line-through decoration-zinc-600">{c.before}</dd>
+                <dd className="mt-0.5 text-muted line-through decoration-[var(--faint)]">{c.before}</dd>
               ) : null}
               <dd className="mt-0.5 break-words">{c.after}</dd>
             </div>
