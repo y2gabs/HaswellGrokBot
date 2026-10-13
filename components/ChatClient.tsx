@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Blob } from "./Blob";
 import { ApprovalCard, ArticleCard, ChoiceChips, ImagePicker } from "./Cards";
@@ -38,6 +39,8 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
   const bottom = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const lastCount = useRef(0);
+  const router = useRouter();
+  const [starting, setStarting] = useState(false);
   const dictation = useDictation(setText);
   const box = useRef<HTMLTextAreaElement>(null);
 
@@ -87,8 +90,10 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
   );
   useEffect(() => {
     if (visible.length !== lastCount.current || busy) {
+      // Jump straight to the latest message when a conversation opens.
+      const first = lastCount.current === 0;
       lastCount.current = visible.length;
-      bottom.current?.scrollIntoView({ behavior: "smooth" });
+      bottom.current?.scrollIntoView({ behavior: first ? "auto" : "smooth" });
     }
   }, [visible.length, busy, thread?.state.step]);
 
@@ -99,6 +104,19 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
     } catch (e) {
       setError((e as Error).message);
       throw e;
+    }
+  }
+
+  async function newConversation() {
+    if (!thread || starting) return;
+    setStarting(true);
+    setError("");
+    try {
+      const fresh = await api<Thread>("/api/threads", { method: "POST", json: { bot: thread.bot } });
+      router.push(`/chat/${fresh.id}`);
+    } catch (e) {
+      setError((e as Error).message);
+      setStarting(false);
     }
   }
 
@@ -213,9 +231,9 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
   }
 
   return (
-    <main className="mx-auto flex h-dvh max-w-md flex-col">
+    <main className="flex h-dvh w-full min-w-0 flex-col">
       <header className="flex items-center gap-3 border-b border-line px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))]">
-        <Link href="/home" className="-ml-1 rounded-full p-2 text-muted hover:bg-panel" aria-label="Back">
+        <Link href="/home" className="-ml-1 rounded-full p-2 text-muted hover:bg-panel md:hidden" aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
@@ -225,9 +243,22 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
           <p className="truncate font-semibold">{meta.name}</p>
           <p className="truncate text-xs text-faint">{siteName}</p>
         </div>
+        <button
+          onClick={newConversation}
+          disabled={!thread || starting || busy}
+          className="ml-auto flex h-9 items-center gap-1.5 rounded-full bg-panel px-3 text-sm text-muted hover:bg-panel-2 disabled:opacity-50"
+          aria-label="New conversation"
+          title="New conversation"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span className="hidden sm:inline">{starting ? "Starting…" : "New chat"}</span>
+        </button>
       </header>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5">
+      <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="mx-auto w-full max-w-2xl space-y-5">
         {thread === null && !error ? <p className="text-center text-sm text-faint">Loading…</p> : null}
         {visible.map(renderMessage)}
 
@@ -258,6 +289,7 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
           <p className="rounded-2xl bg-panel px-4 py-3 text-sm text-bad">{error || dictation.error}</p>
         ) : null}
         <div ref={bottom} />
+        </div>
       </div>
 
       <form
@@ -267,6 +299,7 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
         }}
         className="border-t border-line px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-3"
       >
+        <div className="mx-auto w-full max-w-2xl">
         {attachments.length ? (
           <div className="mb-2 flex gap-2">
             {attachments.map((a) => (
@@ -360,6 +393,7 @@ export function ChatClient({ id, siteName }: { id: number; siteName: string }) {
               <path d="M12 19V5M5 12l7-7 7 7" />
             </svg>
           </button>
+        </div>
         </div>
       </form>
     </main>

@@ -70,12 +70,22 @@ step(
     ),
 );
 
-// Home shows both threads.
+// Home: one row per assistant, each showing its latest conversation.
 await page.goto("http://localhost:3000/home");
-await page.waitForSelector("text=Recent");
+await page.waitForSelector("text=Your team");
 await page.waitForTimeout(800);
-await page.screenshot({ path: `${SHOTS}/10-home-recent.png` });
-step("recent: " + (await page.locator("ul li").allInnerTexts()).map((t) => t.split("\n")[0]).join(" / "));
+await page.screenshot({ path: `${SHOTS}/10-home-list.png` });
+step("assistants: " + (await page.locator("nav li").allInnerTexts()).map((t) => t.replace(/\n+/g, " · ")).join(" / "));
+
+// Desktop: list on the left, conversation on the right.
+await page.setViewportSize({ width: 1280, height: 800 });
+await page.getByRole("button", { name: /Website Manager/ }).click();
+await page.waitForURL(/\/chat\/\d+/);
+await page.waitForSelector("text=Done — your long tagline is updated.");
+step("desktop: list visible beside chat = " + (await page.locator("nav").isVisible()));
+await page.screenshot({ path: `${SHOTS}/11-desktop-chat.png` });
+await page.setViewportSize({ width: 390, height: 844 });
+await page.goto("http://localhost:3000/home");
 
 // Sign out revokes the app password.
 await page.getByRole("button", { name: "Account" }).click();
