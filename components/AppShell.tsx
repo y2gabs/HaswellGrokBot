@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BotList } from "./BotList";
+import { ThemeToggle } from "./ThemeToggle";
 import { api } from "@/lib/client";
 
 /**
@@ -48,7 +49,8 @@ export function AppShell({
               {siteName}
             </a>
           </div>
-          <div className="relative">
+          <div className="relative flex items-center gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setMenu((m) => !m)}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-panel-2 font-semibold"
@@ -57,7 +59,7 @@ export function AppShell({
               {(userName || "?").slice(0, 1).toUpperCase()}
             </button>
             {menu ? (
-              <div className="absolute right-0 z-10 mt-2 w-48 rounded-2xl border border-line bg-panel p-2 shadow-xl">
+              <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-2xl border border-line bg-panel p-2 shadow-xl">
                 <p className="px-3 py-2 text-sm text-muted">{userName}</p>
                 <button onClick={signOut} className="w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-panel-2">
                   Sign out

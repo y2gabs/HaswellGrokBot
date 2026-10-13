@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Dark (default). */
   --bg: #0b0b0c;
   --panel: #161618;
   --panel-2: #1f1f22;
@@ -8,10 +9,32 @@
   --text: #f4f4f5;
   --muted: #a1a1aa;
   --faint: #71717a;
+  --prose: #d4d4d8;
   --bubble: #f4f4f5;
   --bubble-text: #0b0b0c;
+  --hero: #f4f4f5;
+  --hero-accent: #ffffff;
   --good: #34d399;
   --bad: #f87171;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --panel: #f4f4f5;
+  --panel-2: #e9e9ec;
+  --line: #e4e4e7;
+  --text: #18181b;
+  --muted: #52525b;
+  --faint: #8a8a93;
+  --prose: #3f3f46;
+  --bubble: #18181b;
+  --bubble-text: #ffffff;
+  --hero: #a78bfa;
+  --hero-accent: #ede9fe;
+  --good: #059669;
+  --bad: #dc2626;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -31,7 +54,6 @@ html,
 body {
   background: var(--bg);
   color: var(--text);
-  color-scheme: dark;
 }
 
 body {
