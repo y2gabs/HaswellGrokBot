@@ -1,13 +1,14 @@
 # WordPress chat assistants
 
 A mobile-first web app that gives site owners on a WordPress multisite network a
-small team of AI chat assistants for their own site. Each assistant does its
-work conversationally and **always asks before changing anything**.
+small team of AI chat assistants for their own site, grouped into Website,
+Marketing, Operations and Customers. Each assistant does its work
+conversationally and **always asks before changing anything**.
 
-- **Marketing** suggests a few post ideas and writes the one you pick. It then
+- **Article Author** (Marketing) suggests a few post ideas and writes the one you pick. It then
   offers featured-image options and, once you approve, publishes the post.
-- **Website Manager** updates site settings and adds, changes or removes
-  content items (for example services, team members and partners) through
+- **Website Manager** (Website) updates site settings and adds, changes or
+  removes content items (for example services, team members and partners) through
   conversation. You can attach photos in the chat for image fields.
 
 You can type or dictate. The mic button uses the browser's built-in speech

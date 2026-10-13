@@ -22,49 +22,64 @@ if (!radius || radius === "0px") throw new Error("Styles are missing: the Sign i
 await page.fill('input[name="username"]', "editor1");
 await page.fill('input[name="password"]', "wrong-password");
 await page.getByRole("button", { name: "Sign in" }).click();
-await page.waitForSelector("text=Incorrect username or password.");
+await page.waitForSelector("text=Incorrect username or password. >> visible=true");
 step("wrong password rejected in-app");
 await page.screenshot({ path: `${SHOTS}/2-login-error.png` });
 await page.fill('input[name="password"]', "pass1");
 await page.getByRole("button", { name: "Sign in" }).click();
 await page.waitForURL("http://localhost:3000/home");
-await page.waitForSelector("text=Your team");
+await page.waitForSelector("text=Your team >> visible=true");
 step("signed in, home shows: " + (await page.locator("header a").first().innerText()));
+// Groups: the ones with assistants start open; tapping a header toggles it.
+const GROUPS = ["Website", "Marketing", "Operations", "Customers"];
+const group = (name) => page.locator("nav section > button").nth(GROUPS.indexOf(name));
+const groups = await page.locator("nav section > button").allInnerTexts();
+if (groups.map((g) => g.split("\n")[0]).join() !== GROUPS.join()) throw new Error("Unexpected groups: " + groups);
+if ((await group("Website").getAttribute("aria-expanded")) !== "true") throw new Error("Website group should start open.");
+if ((await group("Operations").getAttribute("aria-expanded")) !== "false") throw new Error("Operations group should start closed.");
+await group("Website").click();
+if (await page.getByRole("button", { name: /Website Manager/ }).isVisible()) throw new Error("Collapsing Website didn't hide its assistants.");
+await group("Operations").click();
+await page.waitForSelector("text=Coming soon >> visible=true");
+await page.screenshot({ path: `${SHOTS}/3-groups.png` });
+await group("Website").click();
+await group("Operations").click();
+step("groups toggle open and closed");
 await page.screenshot({ path: `${SHOTS}/3-home.png` });
 
 // Website Manager: change the long tagline, approve.
 await page.getByRole("button", { name: /Website Manager/ }).click();
 await page.waitForURL(/\/chat\/\d+/);
-await page.waitForSelector("text=What would you like to change?");
+await page.waitForSelector("text=What would you like to change? >> visible=true");
 await page.fill("textarea", "Change our long tagline to Plumbing done right, first time");
 await page.keyboard.press("Enter");
-await page.waitForSelector("text=Needs your OK", { timeout: 20000 });
+await page.waitForSelector("text=Needs your OK >> visible=true", { timeout: 20000 });
 await page.screenshot({ path: `${SHOTS}/4-approval.png` });
 step("approval card shown; tagline still: " + wp('echo get_field("long_tagline",3);'));
 await page.getByRole("button", { name: "Approve" }).click();
-await page.waitForSelector("text=Done — your long tagline is updated.", { timeout: 20000 });
+await page.waitForSelector("text=Done — your long tagline is updated. >> visible=true", { timeout: 20000 });
 await page.screenshot({ path: `${SHOTS}/5-approved.png` });
 step("after approve, tagline: " + wp('echo get_field("long_tagline",3);'));
 
-// Marketing: three ideas → pick → article → image → approve → published.
+// Article Author: three ideas → pick → article → image → approve → published.
 await page.goto("http://localhost:3000/home");
-await page.getByRole("button", { name: /Marketing/ }).click();
+await page.getByRole("button", { name: /Article Author/ }).click();
 await page.waitForURL(/\/chat\/\d+/);
-await page.waitForSelector("text=Protect your pipes this winter", { timeout: 20000 });
+await page.waitForSelector("text=Protect your pipes this winter >> visible=true", { timeout: 20000 });
 await page.screenshot({ path: `${SHOTS}/6-ideas.png` });
 step("three ideas offered");
 await page.getByRole("button", { name: /Protect your pipes this winter/ }).click();
-await page.waitForSelector("text=Pick a featured image", { timeout: 20000 });
+await page.waitForSelector("text=Pick a featured image >> visible=true", { timeout: 20000 });
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${SHOTS}/7-article-images.png`, fullPage: true });
 step("article drafted and images offered");
 await page.getByRole("button", { name: "Option 2" }).click();
-await page.waitForSelector("text=Post announcement to your website", { timeout: 20000 });
+await page.waitForSelector("text=Post announcement to your website >> visible=true", { timeout: 20000 });
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${SHOTS}/8-publish-approval.png`, fullPage: true });
 step("announcements before approve: " + wp('echo count(get_posts(["post_type"=>"announcements","post_status"=>"publish"]));'));
 await page.getByRole("button", { name: "Approve" }).click();
-await page.waitForSelector("text=Published!", { timeout: 20000 });
+await page.waitForSelector("text=Published! >> visible=true", { timeout: 20000 });
 await page.screenshot({ path: `${SHOTS}/9-published.png`, fullPage: true });
 step(
   "published: " +
@@ -75,7 +90,7 @@ step(
 
 // Home: one row per assistant, each showing its latest conversation.
 await page.goto("http://localhost:3000/home");
-await page.waitForSelector("text=Your team");
+await page.waitForSelector("text=Your team >> visible=true");
 await page.waitForTimeout(800);
 await page.screenshot({ path: `${SHOTS}/10-home-list.png` });
 step("assistants: " + (await page.locator("nav li").allInnerTexts()).map((t) => t.replace(/\n+/g, " · ")).join(" / "));
@@ -84,7 +99,7 @@ step("assistants: " + (await page.locator("nav li").allInnerTexts()).map((t) => 
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.getByRole("button", { name: /Website Manager/ }).click();
 await page.waitForURL(/\/chat\/\d+/);
-await page.waitForSelector("text=Done — your long tagline is updated.");
+await page.waitForSelector("text=Done — your long tagline is updated. >> visible=true");
 step("desktop: list visible beside chat = " + (await page.locator("nav").isVisible()));
 await page.screenshot({ path: `${SHOTS}/11-desktop-chat.png` });
 await page.setViewportSize({ width: 390, height: 844 });

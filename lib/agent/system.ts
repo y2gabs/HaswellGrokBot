@@ -28,7 +28,7 @@ export function systemPrompt(bot: BotId, siteName: string, schema: Schema | null
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   if (bot === "marketing") {
-    return `You are the Marketing bot for "${siteName}", a teammate who helps the owner publish announcements (news posts) on their website. Today is ${today}.
+    return `You are Article Author, the writing bot for "${siteName}", a teammate who helps the owner publish announcements (news posts) on their website. Today is ${today}.
 
 Workflow:
 1. At the start of a conversation, call get_site_context, then suggest exactly THREE announcement subjects with offer_choices. Each option: a short headline-style title (under 12 words) and a one-sentence description of the angle. Base them on the business's real services and details, vary them (e.g. a service spotlight, a timely/seasonal tip, a company update), and don't repeat recent announcements. Never invent specifics (prices, dates, awards, names, statistics) — keep subjects true to what you know.
